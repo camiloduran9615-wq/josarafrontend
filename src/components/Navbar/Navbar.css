@@ -1,0 +1,250 @@
+/* ─── Navbar ─────────────────────────────────────────────────────── */
+.navbar {
+  flex-shrink: 0;
+  z-index: 40;
+  height: 60px;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 28px;
+  backdrop-filter: blur(8px);
+  background: var(--component-navbar-bg, var(--navbar-bg));
+}
+
+.navbar-title h1 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--foreground);
+  margin: 0;
+}
+
+.navbar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Empresa activa pill */
+.navbar-tenant {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  color: var(--muted-color);
+  background: var(--badge-info-bg);
+  border: 1px solid var(--sidebar-accent);
+  border-radius: 99px;
+  padding: 5px 12px;
+  margin-right: 4px;
+}
+.navbar-tenant-dot {
+  width: 6px;
+  height: 6px;
+  background: var(--success-color);
+  border-radius: 50%;
+  box-shadow: 0 0 5px var(--success-color);
+}
+
+/* Icon buttons */
+.navbar-icon-btn {
+  background: none;
+  border: 1px solid var(--border-color);
+  color: var(--muted-color);
+  border-radius: var(--radius-sm);
+  padding: 7px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition);
+}
+.navbar-icon-btn:hover {
+  background: var(--bg-hover);
+  color: var(--foreground);
+  border-color: var(--border-color);
+}
+
+/* Appearance menu */
+.navbar-appearance-menu {
+  position: relative;
+}
+
+.navbar-appearance-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  display: grid;
+  gap: 4px;
+  width: 168px;
+  padding: 6px;
+  background: var(--popover-color);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-dropdown);
+  animation: dropdown-in 0.15s ease;
+  z-index: 100;
+}
+
+.navbar-appearance-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 9px 10px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--muted-color);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+  transition: var(--transition);
+}
+
+.navbar-appearance-option:hover {
+  background: var(--hover-color);
+  color: var(--foreground);
+}
+
+.navbar-appearance-option.active {
+  background: var(--badge-info-bg);
+  color: var(--primary);
+  border-color: var(--sidebar-accent);
+}
+
+/* User menu button */
+.navbar-user-menu {
+  position: relative;
+}
+
+.navbar-user-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: none;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 6px 12px 6px 6px;
+  cursor: pointer;
+  transition: var(--transition);
+}
+.navbar-user-btn:hover {
+  background: var(--hover-color);
+  border-color: var(--sidebar-accent);
+}
+
+.navbar-avatar {
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, var(--primary), var(--accent-strong));
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--text-on-accent);
+  flex-shrink: 0;
+}
+.navbar-avatar.lg {
+  width: 40px;
+  height: 40px;
+  font-size: 0.85rem;
+}
+
+.navbar-user-info {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+.navbar-user-name {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--foreground);
+  white-space: nowrap;
+}
+.navbar-user-role {
+  font-size: 0.68rem;
+  color: var(--muted-color);
+}
+
+.navbar-chevron {
+  color: var(--muted-color);
+  transition: transform 0.2s;
+}
+.navbar-chevron.open {
+  transform: rotate(180deg);
+}
+
+/* Dropdown */
+.navbar-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 240px;
+  background: var(--popover-color);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-dropdown);
+  overflow: hidden;
+  animation: dropdown-in 0.15s ease;
+  z-index: 100;
+}
+
+@keyframes dropdown-in {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.navbar-dropdown-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--badge-info-bg);
+  border-bottom: 1px solid var(--border-color);
+}
+.navbar-dropdown-name {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--foreground);
+}
+.navbar-dropdown-email {
+  font-size: 0.72rem;
+  color: var(--muted-color);
+  margin-top: 1px;
+}
+
+.navbar-dropdown-divider {
+  height: 1px;
+  background: var(--border-color);
+  margin: 4px 0;
+}
+
+.navbar-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 16px;
+  background: none;
+  border: none;
+  color: var(--muted-color);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  transition: var(--transition);
+}
+.navbar-dropdown-item:hover {
+  background: var(--hover-color);
+  color: var(--foreground);
+}
+.navbar-dropdown-item.danger {
+  color: var(--danger);
+}
+.navbar-dropdown-item.danger:hover {
+  background: color-mix(in srgb, var(--danger-color) 10%, transparent);
+}

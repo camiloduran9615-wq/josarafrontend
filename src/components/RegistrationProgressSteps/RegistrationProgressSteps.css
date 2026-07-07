@@ -1,0 +1,133 @@
+.registration-progress {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--bg-card) 94%, var(--bg-elevated) 6%);
+  padding: 18px;
+  margin-bottom: 22px;
+  color: var(--text-primary);
+}
+
+.registration-progress__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.registration-progress__eyebrow {
+  margin: 0 0 4px;
+  color: var(--text-secondary);
+  font-size: 0.74rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.registration-progress__header h3 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 1rem;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.registration-progress__percent {
+  min-width: 56px;
+  text-align: right;
+  color: var(--emphasis);
+  font-weight: 800;
+  font-size: 0.9rem;
+}
+
+.registration-progress__bar {
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--border) 66%, transparent);
+  margin-bottom: 16px;
+}
+
+.registration-progress__bar > div {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--emphasis), color-mix(in srgb, var(--emphasis) 70%, var(--accent) 30%));
+  transition: width 360ms ease;
+}
+
+.registration-progress__steps {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.registration-progress__step {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  color: var(--text-secondary);
+  font-size: 0.84rem;
+  line-height: 1.25;
+}
+
+.registration-progress__icon {
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+}
+
+.registration-progress__step--active {
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
+.registration-progress__step--active .registration-progress__icon,
+.registration-progress__step--completed .registration-progress__icon {
+  color: var(--emphasis);
+}
+
+.registration-progress__step--completed {
+  color: var(--text-primary);
+}
+
+.registration-progress__step--error,
+.registration-progress__step--error .registration-progress__icon {
+  color: var(--danger);
+  font-weight: 700;
+}
+
+.registration-progress__spin {
+  animation: registration-spin 900ms linear infinite;
+}
+
+.registration-progress__message {
+  margin: 14px 0 0;
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.registration-progress__message--error {
+  color: var(--danger);
+}
+
+@keyframes registration-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 520px) {
+  .registration-progress {
+    padding: 14px;
+  }
+
+  .registration-progress__header {
+    align-items: flex-start;
+  }
+}

@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <!-- Branding: valores inyectados en build por Vite (VITE_APP_*) y
+         sobrescritos en runtime por PlatformProvider (GET /api/platform). -->
+    <link rel="icon" type="image/x-icon" href="/branding/favicon.ico?v=20260704-logo" />
+    <link rel="alternate icon" type="image/svg+xml" href="/branding/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#6366f1" />
+    <meta name="description" content="%VITE_APP_DESCRIPTION%" />
+
+    <!-- Open Graph / redes sociales -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="%VITE_APP_NAME%" />
+    <meta property="og:description" content="%VITE_APP_DESCRIPTION%" />
+    <meta property="og:image" content="/branding/logo-light.svg" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="%VITE_APP_NAME%" />
+    <meta name="twitter:description" content="%VITE_APP_DESCRIPTION%" />
+
+    <title>%VITE_APP_NAME% — %VITE_APP_DESCRIPTION%</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

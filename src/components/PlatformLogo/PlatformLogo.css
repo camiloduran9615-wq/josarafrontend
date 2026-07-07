@@ -1,0 +1,36 @@
+.platform-logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  color: var(--color-primary);
+}
+
+.platform-logo--fallback {
+  background: linear-gradient(135deg, var(--color-primary), color-mix(in srgb, var(--color-primary) 68%, var(--color-background)));
+  box-shadow: 0 4px 12px var(--accent-glow);
+  color: var(--text-on-accent);
+}
+
+.platform-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  opacity: 0;
+  transition: opacity var(--duration-fast, 120ms) ease;
+}
+
+.platform-logo img.is-loaded {
+  opacity: 1;
+}
+
+.platform-logo--inline {
+  background: transparent;
+}
+
+.platform-logo--hero {
+  background: transparent;
+}

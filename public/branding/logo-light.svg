@@ -1,0 +1,12 @@
+<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="JOSARA">
+  <defs>
+    <linearGradient id="josara-g" x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#818cf8"/>
+      <stop offset="1" stop-color="#4f46e5"/>
+    </linearGradient>
+  </defs>
+  <rect width="48" height="48" rx="12" fill="url(#josara-g)"/>
+  <!-- "J" con base ascendente (precisión / número) -->
+  <path d="M30 12v16a8 8 0 0 1-8 8 8 8 0 0 1-8-8" stroke="#ffffff" stroke-width="4" stroke-linecap="round" fill="none"/>
+  <circle cx="30" cy="12" r="2.6" fill="#ffffff"/>
+</svg>
