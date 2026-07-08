@@ -42,29 +42,27 @@ export default function SettingsHub() {
         </div>
       </div>
 
-      <div className="flex gap-8">
+      <div className="settings-layout">
         {/* Sidebar de Configuración */}
-        <div className="w-64 shrink-0">
-          <div className="card p-2 flex flex-col gap-1">
+        <div className="settings-sidebar">
+          <nav className="card settings-nav" aria-label="Secciones de configuración">
             {tabs.map(tab => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as any)}
-                className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all ${
-                  activeTab === tab.id 
-                    ? 'bg-accent text-white shadow-lg shadow-accent/20' 
-                    : 'hover:bg-surface-light text-muted hover:text-white'
+                className={`settings-nav__item ${
+                  activeTab === tab.id ? 'settings-nav__item--active' : ''
                 }`}
               >
-                <tab.icon size={18} />
-                {tab.label}
+                <tab.icon size={18} aria-hidden="true" />
+                <span>{tab.label}</span>
               </button>
             ))}
-          </div>
+          </nav>
         </div>
 
         {/* Contenido Dinámico */}
-        <div className="flex-1 min-w-0">
+        <div className="settings-content">
           {activeTab === 'empresa' && (
             <div className="animate-in fade-in slide-in-from-right-4 duration-300">
               <ConfigPage embedded />

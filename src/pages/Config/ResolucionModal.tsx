@@ -68,76 +68,80 @@ export default function ResolucionModal({ isOpen, onClose, onSuccess, resolucion
 
   return (
     <div className="modal-overlay">
-      <div className="modal" style={{ maxWidth: '500px' }}>
+      <div className="modal modal-md resolution-modal">
         <div className="modal-header">
-          <h2 className="page-title flex items-center gap-2">
-            <CheckCircle size={24} className="text-accent" />
-            {resolucion ? 'Editar Resolución' : 'Nueva Resolución'}
+          <h2 className="modal-title resolution-modal__title">
+            <CheckCircle size={22} className="text-accent" />
+            <span>{resolucion ? 'Editar Resolución' : 'Nueva Resolución'}</span>
           </h2>
-          <button onClick={onClose} className="btn-icon"><X size={20} /></button>
+          <button type="button" onClick={onClose} className="btn-icon" aria-label="Cerrar modal">
+            <X size={20} />
+          </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <div className="input-group">
-            <label>Nombre Descriptivo</label>
-            <input 
-              type="text" className="input" required placeholder="Ej: Facturación Electrónica Principal"
-              value={formData.nombre} onChange={e => setFormData({...formData, nombre: e.target.value})}
-            />
+        <form onSubmit={handleSubmit} className="resolution-modal__form">
+          <div className="modal-body resolution-modal__body">
+            <div className="input-group resolution-modal__field resolution-modal__field--full">
+              <label>Nombre Descriptivo</label>
+              <input
+                type="text" className="input" required placeholder="Ej: Facturación Electrónica Principal"
+                value={formData.nombre} onChange={e => setFormData({...formData, nombre: e.target.value})}
+              />
+            </div>
+
+            <div className="resolution-modal__grid">
+              <div className="input-group resolution-modal__field">
+                <label>Número de Resolución</label>
+                <input
+                  type="text" className="input" required placeholder="1876..."
+                  value={formData.numero_resolucion} onChange={e => setFormData({...formData, numero_resolucion: e.target.value})}
+                />
+              </div>
+              <div className="input-group resolution-modal__field">
+                <label>Prefijo</label>
+                <input
+                  type="text" className="input" placeholder="SETT"
+                  value={formData.prefijo} onChange={e => setFormData({...formData, prefijo: e.target.value})}
+                />
+              </div>
+            </div>
+
+            <div className="resolution-modal__grid">
+              <div className="input-group resolution-modal__field">
+                <label>Desde</label>
+                <input
+                  type="number" className="input" required
+                  value={formData.desde} onChange={e => setFormData({...formData, desde: Number(e.target.value)})}
+                />
+              </div>
+              <div className="input-group resolution-modal__field">
+                <label>Hasta</label>
+                <input
+                  type="number" className="input" required
+                  value={formData.hasta} onChange={e => setFormData({...formData, hasta: Number(e.target.value)})}
+                />
+              </div>
+            </div>
+
+            <div className="resolution-modal__grid">
+              <div className="input-group resolution-modal__field">
+                <label>Fecha Inicio</label>
+                <input
+                  type="date" className="input" required
+                  value={formData.fecha_inicio} onChange={e => setFormData({...formData, fecha_inicio: e.target.value})}
+                />
+              </div>
+              <div className="input-group resolution-modal__field">
+                <label>Fecha Fin</label>
+                <input
+                  type="date" className="input" required
+                  value={formData.fecha_fin} onChange={e => setFormData({...formData, fecha_fin: e.target.value})}
+                />
+              </div>
+            </div>
           </div>
 
-          <div className="grid-cols-2">
-            <div className="input-group">
-              <label>Número de Resolución</label>
-              <input 
-                type="text" className="input" required placeholder="1876..."
-                value={formData.numero_resolucion} onChange={e => setFormData({...formData, numero_resolucion: e.target.value})}
-              />
-            </div>
-            <div className="input-group">
-              <label>Prefijo</label>
-              <input 
-                type="text" className="input" placeholder="SETT"
-                value={formData.prefijo} onChange={e => setFormData({...formData, prefijo: e.target.value})}
-              />
-            </div>
-          </div>
-
-          <div className="grid-cols-2">
-            <div className="input-group">
-              <label>Desde</label>
-              <input 
-                type="number" className="input" required
-                value={formData.desde} onChange={e => setFormData({...formData, desde: Number(e.target.value)})}
-              />
-            </div>
-            <div className="input-group">
-              <label>Hasta</label>
-              <input 
-                type="number" className="input" required
-                value={formData.hasta} onChange={e => setFormData({...formData, hasta: Number(e.target.value)})}
-              />
-            </div>
-          </div>
-
-          <div className="grid-cols-2">
-            <div className="input-group">
-              <label>Fecha Inicio</label>
-              <input 
-                type="date" className="input" required
-                value={formData.fecha_inicio} onChange={e => setFormData({...formData, fecha_inicio: e.target.value})}
-              />
-            </div>
-            <div className="input-group">
-              <label>Fecha Fin</label>
-              <input 
-                type="date" className="input" required
-                value={formData.fecha_fin} onChange={e => setFormData({...formData, fecha_fin: e.target.value})}
-              />
-            </div>
-          </div>
-
-          <div className="flex justify-end gap-3 mt-4">
+          <div className="modal-footer resolution-modal__footer">
             <button type="button" onClick={onClose} className="btn btn-secondary">Cancelar</button>
             <button type="submit" className="btn btn-primary" disabled={loading}>
               {loading ? <Loader2 size={18} className="spinner" /> : <><Save size={18} /> {resolucion ? 'Actualizar' : 'Guardar Resolución'}</>}
