@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { api } from '@/lib/api'
+import { extractApiError } from '@/lib/errors'
 import { getTenantId } from '@/services/auth.service'
 import { RefreshCw, Plus, CheckCircle, Edit2, Power, Lock, Shield } from 'lucide-react'
 import ResolucionModal from './ResolucionModal'
@@ -38,8 +39,7 @@ export default function ResolucionesPage({ embedded = false }: { embedded?: bool
       fetchResoluciones()
       setTimeout(() => setMessage(''), 5000)
     } catch (err) {
-      console.error(err)
-      setMessage('Error al sincronizar con Factus')
+      setMessage(extractApiError(err, 'No fue posible sincronizar con Factus. Intenta nuevamente.'))
     } finally {
       setSyncing(false)
     }

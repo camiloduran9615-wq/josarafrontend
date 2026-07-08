@@ -5,6 +5,7 @@ import {
 } from 'lucide-react'
 import { tipoComprobantesService, type TipoComprobante } from '@/services/tipoComprobantes.service'
 import { resolucionesService, type Resolucion } from '@/services/resoluciones.service'
+import { extractApiError } from '@/lib/errors'
 import { getAxiosErrorData } from '@/lib/errors'
 
 const TIPOS_DOC = [
@@ -120,14 +121,17 @@ function ComprobanteModal({ item, onClose, onSave }: ModalProps) {
 
   const set = (patch: Partial<typeof emptyForm>) => setForm(p => ({ ...p, ...patch }))
 
-  // Carga resoluciones — sincroniza con Factus primero
+  // Carga resoluciones locales; sincroniza con Factus solo cuando el usuario lo solicita.
   const loadResoluciones = async (showSync = false) => {
     if (showSync) setSyncing(true)
     else setLoadingRes(true)
+    setError('')
     try {
-      await resolucionesService.syncFromFactus().catch(() => {})
+      if (showSync) await resolucionesService.syncFromFactus()
       const ress = await resolucionesService.getAll()
       setResoluciones(ress.filter(r => r.activa))
+    } catch (err) {
+      setError(extractApiError(err, 'No fue posible obtener las resoluciones DIAN. Intenta nuevamente.'))
     } finally {
       setSyncing(false)
       setLoadingRes(false)
