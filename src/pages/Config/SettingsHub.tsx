@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import {
   Building2, FileText, Calculator,
-  Link2, Settings as SettingsIcon, Layers, ShoppingCart, Grid3X3, Percent,
+  Link2, Settings as SettingsIcon, Layers, ShoppingCart, Grid3X3, Percent, MapPinned,
 } from 'lucide-react'
 import ConfigPage from './ConfigPage'
 import ResolucionesPage from './ResolucionesPage'
@@ -12,8 +12,9 @@ import TiposDocumentoIngresoPage from './TiposDocumentoIngresoPage'
 import ImpuestosPage from './ImpuestosPage'
 import FactusConfigPage from './FactusConfigPage'
 import CentrosCostoPage from '@/pages/CentrosCosto/CentrosCostoPage'
+import MunicipiosDanePage from './MunicipiosDanePage'
 
-type Tab = 'empresa' | 'sucursales' | 'resoluciones' | 'comprobantes' | 'contabilidad' | 'tipos_compra' | 'centros_costo' | 'impuestos' | 'integracion'
+type Tab = 'empresa' | 'sucursales' | 'resoluciones' | 'municipios_dane' | 'comprobantes' | 'contabilidad' | 'tipos_compra' | 'centros_costo' | 'impuestos' | 'integracion'
 
 export default function SettingsHub() {
   const [activeTab, setActiveTab] = useState<Tab>('empresa')
@@ -22,6 +23,7 @@ export default function SettingsHub() {
     { id: 'empresa',       label: 'Perfil Empresa',       icon: Building2 },
     { id: 'sucursales',    label: 'Sucursales',            icon: Building2 },
     { id: 'resoluciones',  label: 'Resoluciones DIAN',     icon: FileText },
+    { id: 'municipios_dane', label: 'Municipios DANE',      icon: MapPinned },
     { id: 'comprobantes',  label: 'Tipos de Comprobante',  icon: Layers },
     { id: 'contabilidad',  label: 'Cuentas Maestras',      icon: Calculator },
     { id: 'tipos_compra',   label: 'Tipos de Compra',      icon: ShoppingCart },
@@ -72,6 +74,12 @@ export default function SettingsHub() {
           {activeTab === 'resoluciones' && (
             <div className="animate-in fade-in slide-in-from-right-4 duration-300">
               <ResolucionesPage embedded />
+            </div>
+          )}
+
+          {activeTab === 'municipios_dane' && (
+            <div className="animate-in fade-in slide-in-from-right-4 duration-300">
+              <MunicipiosDanePage embedded />
             </div>
           )}
 

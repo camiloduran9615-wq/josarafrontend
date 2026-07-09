@@ -1273,6 +1273,71 @@ tbody tr:last-child { border-bottom: none; }
   min-width: 0;
 }
 
+
+/* ─── Configuración: Municipios DANE ──────────────────────────────── */
+.municipios-dane-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+.municipios-dane-toolbar {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) 150px auto;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4);
+}
+.municipios-dane-search {
+  position: relative;
+  min-width: 0;
+}
+.municipios-dane-search svg {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  pointer-events: none;
+}
+.municipios-dane-search .input {
+  padding-left: 38px;
+}
+.municipios-dane-state {
+  min-width: 150px;
+}
+.municipios-dane-alert {
+  margin: 0;
+}
+.municipios-dane-table td {
+  vertical-align: middle;
+}
+.municipios-dane-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.municipios-dane-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+.municipios-dane-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+.municipios-dane-form .input-group {
+  margin: 0;
+}
+.municipios-dane-check {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
 .confirm-dialog {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
@@ -4728,6 +4793,17 @@ tbody tr:last-child { border-bottom: none; }
   }
   .settings-nav__item {
     min-height: 42px;
+  }
+
+  .municipios-dane-toolbar {
+    grid-template-columns: 1fr;
+  }
+  .municipios-dane-state,
+  .municipios-dane-toolbar .btn {
+    width: 100%;
+  }
+  .municipios-dane-form-grid {
+    grid-template-columns: 1fr;
   }
   .annual-close-form-row,
   .annual-close-actions {
