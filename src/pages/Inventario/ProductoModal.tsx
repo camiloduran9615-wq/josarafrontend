@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
+import { useNavigate } from 'react-router-dom'
 import { api } from '@/lib/api'
 import { getAxiosErrorData } from '@/lib/errors'
 import { getTenantId } from '@/services/auth.service'
-import { X, Save, Loader2, Package } from 'lucide-react'
+import { X, Save, Loader2, Package, Settings } from 'lucide-react'
 import UnidadMedidaInput from '@/components/UnidadMedidaInput'
 import type { ProductoInventario } from './InventarioPage'
 
@@ -41,6 +42,7 @@ interface ProductoModalProps {
 export default function ProductoModal({
   isOpen, onClose, onSuccess, onCreated, producto, overlayZIndex = 100,
 }: ProductoModalProps) {
+  const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [cuentas, setCuentas] = useState<CuentaContableOption[]>([])
@@ -99,6 +101,11 @@ export default function ProductoModal({
   }, [producto, isOpen])
 
   const set = (patch: Partial<typeof formData>) => setFormData(p => ({ ...p, ...patch }))
+
+  const goToUnitSettings = () => {
+    onClose()
+    navigate('/configuracion?tab=unidades_dian')
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -163,7 +170,12 @@ export default function ProductoModal({
             </div>
 
             <div className="input-group">
-              <label>Unidad de medida DIAN *</label>
+              <div className="inventory-unit-label-row">
+                <label>Unidad de medida DIAN *</label>
+                <button type="button" className="btn btn-sm btn-secondary" onClick={goToUnitSettings}>
+                  <Settings size={14} /> Configurar unidades
+                </button>
+              </div>
               <UnidadMedidaInput
                 value={formData.unidad_medida}
                 onChange={code => set({ unidad_medida: code })}

@@ -5111,3 +5111,22 @@ tbody tr:last-child { border-bottom: none; }
     transition-duration: 0.01ms !important;
   }
 }
+
+
+.inventory-unit-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.inventory-unit-label-row .btn {
+  flex-shrink: 0;
+}
+
+@media (max-width: 640px) {
+  .inventory-unit-label-row {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

@@ -1,7 +1,11 @@
 import { useState, useEffect, useRef } from 'react'
 import { Search } from 'lucide-react'
+import { api } from '@/lib/api'
+import { getTenantId } from '@/services/auth.service'
 
-export const UNIDADES_DIAN = [
+export type UnidadDianOption = { code: string; label: string }
+
+export const UNIDADES_DIAN: UnidadDianOption[] = [
   { code: '94',  label: 'Unidad' },
   { code: '70',  label: 'Actividad' },
   { code: 'KGM', label: 'Kilogramo' },
@@ -40,15 +44,31 @@ export const UNIDADES_DIAN = [
 export default function UnidadMedidaInput({
   value, onChange,
 }: { value: string; onChange: (code: string) => void }) {
-  const selected = UNIDADES_DIAN.find(u => u.code === value)
+  const [unidades, setUnidades] = useState<UnidadDianOption[]>(UNIDADES_DIAN)
+  const selected = unidades.find(u => u.code === value) ?? UNIDADES_DIAN.find(u => u.code === value)
   const [search, setSearch] = useState(selected ? `${selected.code} - ${selected.label}` : '')
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    const s = UNIDADES_DIAN.find(u => u.code === value)
+    const tenantId = getTenantId()
+    if (!tenantId) return
+
+    api.get(`/${tenantId}/unidades-medida-dian`, { params: { limit: 300, estado: 'activos' } })
+      .then(res => {
+        const remote = (res.data.data ?? []).map((u: { codigo: string; nombre: string }) => ({
+          code: u.codigo,
+          label: u.nombre,
+        }))
+        if (remote.length > 0) setUnidades(remote)
+      })
+      .catch(() => setUnidades(UNIDADES_DIAN))
+  }, [])
+
+  useEffect(() => {
+    const s = unidades.find(u => u.code === value) ?? UNIDADES_DIAN.find(u => u.code === value)
     setSearch(s ? `${s.code} - ${s.label}` : value)
-  }, [value])
+  }, [value, unidades])
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -58,7 +78,7 @@ export default function UnidadMedidaInput({
     return () => document.removeEventListener('mousedown', handler)
   }, [])
 
-  const filtered = UNIDADES_DIAN.filter(u => {
+  const filtered = unidades.filter(u => {
     const q = search.toLowerCase()
     return !q || u.code.toLowerCase().includes(q) || u.label.toLowerCase().includes(q)
   })

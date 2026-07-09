@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import {
   Building2, FileText, Calculator,
-  Link2, Settings as SettingsIcon, Layers, ShoppingCart, Grid3X3, Percent, MapPinned,
+  Link2, Settings as SettingsIcon, Layers, ShoppingCart, Grid3X3, Percent, MapPinned, Ruler,
 } from 'lucide-react'
 import ConfigPage from './ConfigPage'
 import ResolucionesPage from './ResolucionesPage'
@@ -13,10 +14,13 @@ import ImpuestosPage from './ImpuestosPage'
 import FactusConfigPage from './FactusConfigPage'
 import CentrosCostoPage from '@/pages/CentrosCosto/CentrosCostoPage'
 import MunicipiosDanePage from './MunicipiosDanePage'
+import UnidadesDianPage from './UnidadesDianPage'
 
-type Tab = 'empresa' | 'sucursales' | 'resoluciones' | 'municipios_dane' | 'comprobantes' | 'contabilidad' | 'tipos_compra' | 'centros_costo' | 'impuestos' | 'integracion'
+type Tab = 'empresa' | 'sucursales' | 'resoluciones' | 'municipios_dane' | 'unidades_dian' | 'comprobantes' | 'contabilidad' | 'tipos_compra' | 'centros_costo' | 'impuestos' | 'integracion'
 
 export default function SettingsHub() {
+  const [searchParams, setSearchParams] = useSearchParams()
+  const requestedTab = searchParams.get('tab') as Tab | null
   const [activeTab, setActiveTab] = useState<Tab>('empresa')
 
   const tabs = [
@@ -24,6 +28,7 @@ export default function SettingsHub() {
     { id: 'sucursales',    label: 'Sucursales',            icon: Building2 },
     { id: 'resoluciones',  label: 'Resoluciones DIAN',     icon: FileText },
     { id: 'municipios_dane', label: 'Municipios DANE',      icon: MapPinned },
+    { id: 'unidades_dian', label: 'Unidades DIAN',          icon: Ruler },
     { id: 'comprobantes',  label: 'Tipos de Comprobante',  icon: Layers },
     { id: 'contabilidad',  label: 'Cuentas Maestras',      icon: Calculator },
     { id: 'tipos_compra',   label: 'Tipos de Compra',      icon: ShoppingCart },
@@ -31,6 +36,17 @@ export default function SettingsHub() {
     { id: 'impuestos',     label: 'Impuestos',             icon: Percent },
     { id: 'integracion',   label: 'API & Factus',          icon: Link2 },
   ]
+
+  useEffect(() => {
+    if (requestedTab && tabs.some(tab => tab.id === requestedTab)) {
+      setActiveTab(requestedTab)
+    }
+  }, [requestedTab])
+
+  const selectTab = (tab: Tab) => {
+    setActiveTab(tab)
+    setSearchParams(tab === 'empresa' ? {} : { tab })
+  }
 
   return (
     <div className="page-container">
@@ -51,7 +67,7 @@ export default function SettingsHub() {
             {tabs.map(tab => (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id as any)}
+                onClick={() => selectTab(tab.id as Tab)}
                 className={`settings-nav__item ${
                   activeTab === tab.id ? 'settings-nav__item--active' : ''
                 }`}
@@ -80,6 +96,12 @@ export default function SettingsHub() {
           {activeTab === 'municipios_dane' && (
             <div className="animate-in fade-in slide-in-from-right-4 duration-300">
               <MunicipiosDanePage embedded />
+            </div>
+          )}
+
+          {activeTab === 'unidades_dian' && (
+            <div className="animate-in fade-in slide-in-from-right-4 duration-300">
+              <UnidadesDianPage embedded />
             </div>
           )}
 
