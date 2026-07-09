@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { X, Printer, Loader2, FileCheck } from 'lucide-react'
 import { api } from '@/lib/api'
+import { extractApiError } from '@/lib/errors'
 import { getTenantId } from '@/services/auth.service'
 
 interface CertificadoModalProps {
@@ -13,24 +14,32 @@ interface CertificadoModalProps {
 export default function CertificadoModal({ isOpen, onClose, terceroId, terceroNombre }: CertificadoModalProps) {
   const [loading, setLoading] = useState(false)
   const [data, setData] = useState<any>(null)
+  const [error, setError] = useState('')
   const [startDate, setStartDate] = useState(new Date().getFullYear() + '-01-01')
   const [endDate, setEndDate] = useState(new Date().getFullYear() + '-12-31')
 
   const fetchCertificate = async () => {
     try {
       setLoading(true)
+      setError('')
       const res = await api.get(`/${getTenantId()}/reports/withholding-certificate/${terceroId}`, {
         params: { start_date: startDate, end_date: endDate }
       })
       setData(res.data)
     } catch (err) {
-      console.error(err)
+      setError(extractApiError(err, 'No fue posible generar el certificado. Intenta nuevamente.'))
     } finally {
       setLoading(false)
     }
   }
 
   if (!isOpen) return null
+
+  const handleClose = () => {
+    setError('')
+    setData(null)
+    onClose()
+  }
 
   return (
     <div className="modal-overlay">
@@ -40,7 +49,7 @@ export default function CertificadoModal({ isOpen, onClose, terceroId, terceroNo
             <FileCheck size={24} className="text-accent" />
             Certificado de Retención
           </h2>
-          <button onClick={onClose} className="btn-icon">
+          <button onClick={handleClose} className="btn-icon" aria-label="Cerrar certificado">
             <X size={20} />
           </button>
         </div>
@@ -48,6 +57,7 @@ export default function CertificadoModal({ isOpen, onClose, terceroId, terceroNo
         {!data ? (
           <div className="flex flex-col gap-6">
             <p className="text-sm text-muted">Generar certificado para <strong>{terceroNombre}</strong></p>
+            {error && <div className="alert alert-error">{error}</div>}
             <div className="grid-cols-2">
               <div className="input-group">
                 <label>Desde</label>
@@ -59,7 +69,7 @@ export default function CertificadoModal({ isOpen, onClose, terceroId, terceroNo
               </div>
             </div>
             <div className="flex justify-end gap-3">
-              <button onClick={onClose} className="btn btn-secondary">Cancelar</button>
+              <button onClick={handleClose} className="btn btn-secondary">Cancelar</button>
               <button onClick={fetchCertificate} className="btn btn-primary" disabled={loading}>
                 {loading ? <Loader2 size={18} className="spinner" /> : 'Generar Vista Previa'}
               </button>
