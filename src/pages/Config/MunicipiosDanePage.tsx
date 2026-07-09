@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import type { AxiosError } from 'axios'
 import { api } from '@/lib/api'
 import { getTenantId } from '@/services/auth.service'
-import { AlertCircle, Check, Edit2, Loader2, MapPin, Plus, Power, Search, X } from 'lucide-react'
+import { AlertCircle, Check, DownloadCloud, Edit2, Loader2, MapPin, Plus, Power, Search, X } from 'lucide-react'
 
 interface MunicipioDane {
   codigo: string
@@ -21,6 +21,15 @@ const emptyForm = {
   departamento_nombre: '',
   region: '',
   activo: true,
+}
+
+type SyncResult = {
+  processed: number
+  inserted: number
+  updated: number
+  skipped: number
+  total: number
+  source?: string | null
 }
 
 type ApiErrorBody = {
@@ -50,12 +59,14 @@ export default function MunicipiosDanePage({ embedded = false }: { embedded?: bo
   const [municipios, setMunicipios] = useState<MunicipioDane[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [syncing, setSyncing] = useState(false)
   const [error, setError] = useState('')
   const [query, setQuery] = useState('')
   const [estado, setEstado] = useState('activos')
   const [showForm, setShowForm] = useState(false)
   const [editando, setEditando] = useState<MunicipioDane | null>(null)
   const [form, setForm] = useState({ ...emptyForm })
+  const [syncResult, setSyncResult] = useState<SyncResult | null>(null)
 
   const fetchMunicipios = useCallback(async () => {
     setLoading(true)
@@ -77,6 +88,21 @@ export default function MunicipiosDanePage({ embedded = false }: { embedded?: bo
     const timer = window.setTimeout(fetchMunicipios, 250)
     return () => window.clearTimeout(timer)
   }, [fetchMunicipios])
+
+  const sincronizarDane = async () => {
+    setSyncing(true)
+    setError('')
+    setSyncResult(null)
+    try {
+      const res = await api.post(`${tenantBase()}/sync`)
+      setSyncResult(res.data.data ?? null)
+      await fetchMunicipios()
+    } catch (error) {
+      setError(getApiErrorMessage(error, 'No se pudo sincronizar el catálogo DANE.'))
+    } finally {
+      setSyncing(false)
+    }
+  }
 
   const abrirNuevo = () => {
     setEditando(null)
@@ -172,10 +198,20 @@ export default function MunicipiosDanePage({ embedded = false }: { embedded?: bo
         <select className="input municipios-dane-state" value={estado} onChange={e => setEstado(e.target.value)}>
           {estadoOptions.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}
         </select>
+        <button className="btn btn-secondary" type="button" onClick={sincronizarDane} disabled={syncing}>
+          {syncing ? <Loader2 size={16} className="spinner" /> : <DownloadCloud size={16} />} Sincronizar DANE
+        </button>
         <button className="btn btn-primary" type="button" onClick={abrirNuevo}>
           <Plus size={16} /> Nuevo municipio
         </button>
       </div>
+
+      {syncResult && (
+        <div className="alert alert-success municipios-dane-alert">
+          <Check size={16} />
+          Sincronización completada: {syncResult.inserted} insertados, {syncResult.updated} actualizados, {syncResult.skipped} omitidos. Total: {syncResult.total}.
+        </div>
+      )}
 
       {error && (
         <div className="alert alert-danger municipios-dane-alert">

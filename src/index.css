@@ -1282,7 +1282,7 @@ tbody tr:last-child { border-bottom: none; }
 }
 .municipios-dane-toolbar {
   display: grid;
-  grid-template-columns: minmax(220px, 1fr) 150px auto;
+  grid-template-columns: minmax(220px, 1fr) 150px auto auto;
   align-items: center;
   gap: var(--space-3);
   padding: var(--space-4);
