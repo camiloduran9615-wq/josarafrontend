@@ -1,127 +1,106 @@
-import { useState, useEffect, useRef } from 'react'
-import { Search } from 'lucide-react'
-import { api } from '@/lib/api'
-import { getTenantId } from '@/services/auth.service'
-
-export type UnidadDianOption = { code: string; label: string }
-
-export const UNIDADES_DIAN: UnidadDianOption[] = [
-  { code: '94',  label: 'Unidad' },
-  { code: '70',  label: 'Actividad' },
-  { code: 'KGM', label: 'Kilogramo' },
-  { code: 'GRM', label: 'Gramo' },
-  { code: 'TNE', label: 'Tonelada métrica' },
-  { code: 'LTR', label: 'Litro' },
-  { code: 'MLT', label: 'Mililitro' },
-  { code: 'MTR', label: 'Metro' },
-  { code: 'CMT', label: 'Centímetro' },
-  { code: 'MMT', label: 'Milímetro' },
-  { code: 'MTK', label: 'Metro cuadrado' },
-  { code: 'CMK', label: 'Centímetro cuadrado' },
-  { code: 'MTQ', label: 'Metro cúbico' },
-  { code: 'CMQ', label: 'Centímetro cúbico' },
-  { code: 'HUR', label: 'Hora' },
-  { code: 'MIN', label: 'Minuto' },
-  { code: 'DAY', label: 'Día' },
-  { code: 'WEE', label: 'Semana' },
-  { code: 'MON', label: 'Mes' },
-  { code: 'ANN', label: 'Año' },
-  { code: 'SET', label: 'Kit / Conjunto' },
-  { code: 'PAR', label: 'Par' },
-  { code: 'DZN', label: 'Docena' },
-  { code: 'GLL', label: 'Galón americano' },
-  { code: 'BX',  label: 'Caja' },
-  { code: 'BG',  label: 'Bolsa' },
-  { code: 'BO',  label: 'Botella' },
-  { code: 'PK',  label: 'Paquete' },
-  { code: 'RL',  label: 'Rollo' },
-  { code: 'ST',  label: 'Hoja' },
-  { code: 'GL',  label: 'Galón' },
-  { code: 'E48', label: 'Servicio' },
-  { code: 'ZZ',  label: 'Ítem mutualmente definido' },
-]
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { Loader2, Search } from 'lucide-react'
+import { UNIDADES_DIAN_FALLBACK, unidadesMedidaDianService, type UnidadMedidaOption } from '@/services/unidadesMedidaDian.service'
 
 export default function UnidadMedidaInput({
-  value, onChange,
-}: { value: string; onChange: (code: string) => void }) {
-  const [unidades, setUnidades] = useState<UnidadDianOption[]>(UNIDADES_DIAN)
-  const selected = unidades.find(u => u.code === value) ?? UNIDADES_DIAN.find(u => u.code === value)
-  const [search, setSearch] = useState(selected ? `${selected.code} - ${selected.label}` : '')
+  value,
+  onChange,
+}: {
+  value: string
+  onChange: (code: string) => void
+}) {
+  const [unidades, setUnidades] = useState<UnidadMedidaOption[]>(UNIDADES_DIAN_FALLBACK)
+  const [search, setSearch] = useState('')
   const [open, setOpen] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [usingFallback, setUsingFallback] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    const tenantId = getTenantId()
-    if (!tenantId) return
+    let mounted = true
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setLoading(true)
+    setUsingFallback(false)
 
-    api.get(`/${tenantId}/unidades-medida-dian`, { params: { limit: 300, estado: 'activos' } })
-      .then(res => {
-        const remote = (res.data.data ?? []).map((u: { codigo: string; nombre: string }) => ({
-          code: u.codigo,
-          label: u.nombre,
-        }))
-        if (remote.length > 0) setUnidades(remote)
+    unidadesMedidaDianService.getActivas()
+      .then(options => {
+        if (!mounted) return
+        if (options.length > 0) {
+          setUnidades(options)
+          setUsingFallback(false)
+        } else {
+          setUnidades(UNIDADES_DIAN_FALLBACK)
+          setUsingFallback(true)
+        }
       })
-      .catch(() => setUnidades(UNIDADES_DIAN))
+      .catch(() => {
+        if (!mounted) return
+        setUnidades(UNIDADES_DIAN_FALLBACK)
+        setUsingFallback(true)
+      })
+      .finally(() => {
+        if (mounted) setLoading(false)
+      })
+
+    return () => { mounted = false }
   }, [])
 
   useEffect(() => {
-    const s = unidades.find(u => u.code === value) ?? UNIDADES_DIAN.find(u => u.code === value)
-    setSearch(s ? `${s.code} - ${s.label}` : value)
+    const selected = unidades.find(u => u.code === value) ?? UNIDADES_DIAN_FALLBACK.find(u => u.code === value)
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setSearch(selected ? `${selected.code} - ${selected.label}` : value)
   }, [value, unidades])
 
   useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    const handler = (event: MouseEvent) => {
+      if (ref.current && !ref.current.contains(event.target as Node)) setOpen(false)
     }
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
   }, [])
 
-  const filtered = unidades.filter(u => {
-    const q = search.toLowerCase()
-    return !q || u.code.toLowerCase().includes(q) || u.label.toLowerCase().includes(q)
-  })
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase()
+    return unidades.filter(unidad => (
+      !q || unidad.code.toLowerCase().includes(q) || unidad.label.toLowerCase().includes(q)
+    ))
+  }, [search, unidades])
 
   return (
-    <div ref={ref} style={{ position: 'relative' }}>
-      <div style={{ position: 'relative' }}>
-        <Search size={13} style={{
-          position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)',
-          color: 'var(--text-muted)', pointerEvents: 'none',
-        }} />
+    <div ref={ref} className="unit-measure-input">
+      <div className="unit-measure-input__control">
+        <Search size={13} className="unit-measure-input__icon" aria-hidden="true" />
         <input
-          className="input"
-          style={{ paddingLeft: 28 }}
+          className="input unit-measure-input__field"
           placeholder="Buscar unidad DIAN..."
           value={search}
-          onChange={e => { setSearch(e.target.value); setOpen(true) }}
+          onChange={event => { setSearch(event.target.value); setOpen(true) }}
           onFocus={() => setOpen(true)}
+          aria-autocomplete="list"
+          aria-expanded={open}
         />
+        {loading && <Loader2 size={14} className="spinner unit-measure-input__loader" aria-hidden="true" />}
       </div>
+
+      {usingFallback && (
+        <div className="unit-measure-input__status">Usando catálogo base de unidades DIAN.</div>
+      )}
+
       {open && (
-        <div style={{
-          position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0,
-          background: 'var(--bg-card)', border: '1px solid var(--border)',
-          borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
-          zIndex: 9999, maxHeight: 220, overflowY: 'auto',
-        }}>
+        <div className="unit-measure-input__menu" role="listbox">
           {filtered.length === 0
-            ? <div style={{ padding: '10px 12px', fontSize: '0.8rem', color: 'var(--text-muted)' }}>Sin resultados</div>
-            : filtered.map(u => (
+            ? <div className="unit-measure-input__empty">Sin resultados</div>
+            : filtered.map(unidad => (
               <button
-                key={u.code} type="button"
-                onClick={() => { onChange(u.code); setSearch(`${u.code} - ${u.label}`); setOpen(false) }}
-                style={{
-                  width: '100%', display: 'flex', gap: 12, padding: '8px 12px',
-                  border: 'none', background: u.code === value ? 'rgba(99,102,241,0.1)' : 'none',
-                  cursor: 'pointer', textAlign: 'left', alignItems: 'center',
-                }}
-                onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-hover)')}
-                onMouseLeave={e => (e.currentTarget.style.background = u.code === value ? 'rgba(99,102,241,0.1)' : 'none')}
+                key={unidad.code}
+                type="button"
+                className={`unit-measure-input__option ${unidad.code === value ? 'unit-measure-input__option--active' : ''}`}
+                onClick={() => { onChange(unidad.code); setSearch(`${unidad.code} - ${unidad.label}`); setOpen(false) }}
+                role="option"
+                aria-selected={unidad.code === value}
               >
-                <span style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--accent-light)', minWidth: 40 }}>{u.code}</span>
-                <span style={{ fontSize: '0.8rem' }}>{u.label}</span>
+                <span className="unit-measure-input__code">{unidad.code}</span>
+                <span className="unit-measure-input__label">{unidad.label}</span>
               </button>
             ))
           }

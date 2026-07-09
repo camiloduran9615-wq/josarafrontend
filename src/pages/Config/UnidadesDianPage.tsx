@@ -3,6 +3,7 @@ import { AlertCircle, Check, Edit2, Loader2, Plus, Power, Ruler, Search, X } fro
 import { api } from '@/lib/api'
 import { extractApiError } from '@/lib/errors'
 import { getTenantId } from '@/services/auth.service'
+import { unidadesMedidaDianService } from '@/services/unidadesMedidaDian.service'
 
 interface UnidadDian {
   codigo: string
@@ -108,6 +109,7 @@ export default function UnidadesDianPage({ embedded = false }: { embedded?: bool
           codigo: form.codigo.trim().toUpperCase(),
         })
       }
+      unidadesMedidaDianService.invalidate()
       await fetchUnidades()
       cerrarForm()
     } catch (err) {
@@ -121,6 +123,7 @@ export default function UnidadesDianPage({ embedded = false }: { embedded?: bool
     setError('')
     try {
       await api.delete(`${tenantBase()}/${unidad.codigo}`)
+      unidadesMedidaDianService.invalidate()
       await fetchUnidades()
     } catch (err) {
       setError(extractApiError(err, 'No se pudo cambiar el estado de la unidad.'))
