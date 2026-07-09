@@ -23,6 +23,11 @@ const emptyForm = {
   activo: true,
 }
 
+type SyncStatus = {
+  configured: boolean
+  host?: string | null
+}
+
 type SyncResult = {
   processed: number
   inserted: number
@@ -67,6 +72,7 @@ export default function MunicipiosDanePage({ embedded = false }: { embedded?: bo
   const [editando, setEditando] = useState<MunicipioDane | null>(null)
   const [form, setForm] = useState({ ...emptyForm })
   const [syncResult, setSyncResult] = useState<SyncResult | null>(null)
+  const [syncStatus, setSyncStatus] = useState<SyncStatus | null>(null)
 
   const fetchMunicipios = useCallback(async () => {
     setLoading(true)
@@ -89,7 +95,26 @@ export default function MunicipiosDanePage({ embedded = false }: { embedded?: bo
     return () => window.clearTimeout(timer)
   }, [fetchMunicipios])
 
+  const fetchSyncStatus = useCallback(async () => {
+    try {
+      const res = await api.get(`${tenantBase()}/sync/status`)
+      setSyncStatus(res.data.data ?? null)
+    } catch {
+      setSyncStatus(null)
+    }
+  }, [])
+
+  useEffect(() => {
+    const timer = window.setTimeout(fetchSyncStatus, 0)
+    return () => window.clearTimeout(timer)
+  }, [fetchSyncStatus])
+
   const sincronizarDane = async () => {
+    if (syncStatus && !syncStatus.configured) {
+      setError('La fuente oficial DANE no está configurada en el servidor.')
+      return
+    }
+
     setSyncing(true)
     setError('')
     setSyncResult(null)
@@ -198,7 +223,7 @@ export default function MunicipiosDanePage({ embedded = false }: { embedded?: bo
         <select className="input municipios-dane-state" value={estado} onChange={e => setEstado(e.target.value)}>
           {estadoOptions.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}
         </select>
-        <button className="btn btn-secondary" type="button" onClick={sincronizarDane} disabled={syncing}>
+        <button className="btn btn-secondary" type="button" onClick={sincronizarDane} disabled={syncing || syncStatus?.configured === false}>
           {syncing ? <Loader2 size={16} className="spinner" /> : <DownloadCloud size={16} />} Sincronizar DANE
         </button>
         <button className="btn btn-primary" type="button" onClick={abrirNuevo}>
@@ -206,10 +231,17 @@ export default function MunicipiosDanePage({ embedded = false }: { embedded?: bo
         </button>
       </div>
 
+      {syncStatus?.configured === false && (
+        <div className="alert alert-warning municipios-dane-alert">
+          <AlertCircle size={16} />
+          Fuente DANE no configurada. Define DANE_DIVIPOLA_URL en el backend para habilitar la sincronización oficial.
+        </div>
+      )}
+
       {syncResult && (
         <div className="alert alert-success municipios-dane-alert">
           <Check size={16} />
-          Sincronización completada: {syncResult.inserted} insertados, {syncResult.updated} actualizados, {syncResult.skipped} omitidos. Total: {syncResult.total}.
+          Sincronización completada{syncResult.source ? ` desde ${syncStatus?.host ?? 'fuente oficial'}` : ''}: {syncResult.inserted} insertados, {syncResult.updated} actualizados, {syncResult.skipped} omitidos. Total: {syncResult.total}.
         </div>
       )}
 
