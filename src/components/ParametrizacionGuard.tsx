@@ -36,14 +36,18 @@ export default function ParametrizacionGuard({ modulo, isOpen, onClose, onValido
   const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
   const [faltantes, setFaltantes] = useState<ClaveFaltante[] | null>(null)
+  const [validationError, setValidationError] = useState<string | null>(null)
+  const [validationAttempt, setValidationAttempt] = useState(0)
 
   useEffect(() => {
     if (!isOpen) {
       setFaltantes(null)
+      setValidationError(null)
       return
     }
     let cancelled = false
     setLoading(true)
+    setValidationError(null)
     api.get(`/${getTenantId()}/parametrizacion-contable/validar/${modulo}`)
       .then(res => {
         if (cancelled) return
@@ -54,19 +58,24 @@ export default function ParametrizacionGuard({ modulo, isOpen, onClose, onValido
           setFaltantes(res.data?.data?.faltantes ?? [])
         }
       })
-      .catch(() => {
+      .catch((error: unknown) => {
         if (!cancelled) {
-          // Si falla la validación, dejamos pasar (no bloquear por error del check)
-          setFaltantes([])
-          onValido()
+          const apiError = error as { response?: { data?: { message?: string } } }
+          setFaltantes(null)
+          setValidationError(
+            apiError.response?.data?.message
+              ?? 'No fue posible validar la parametrización contable. Reintenta antes de continuar.',
+          )
         }
       })
       .finally(() => { if (!cancelled) setLoading(false) })
     return () => { cancelled = true }
-  }, [isOpen, modulo, onValido])
+  }, [isOpen, modulo, onValido, validationAttempt])
 
-  if (!isOpen || faltantes === null || faltantes.length === 0) {
-    return loading ? (
+  if (!isOpen) return null
+
+  if (loading) {
+    return (
       <div style={{
         position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)',
         zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -75,8 +84,55 @@ export default function ParametrizacionGuard({ modulo, isOpen, onClose, onValido
           <Loader2 size={20} className="spinner" />
         </div>
       </div>
-    ) : null
+    )
   }
+
+  if (validationError) {
+    return (
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="parametrizacion-error-title"
+        style={{
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)',
+          backdropFilter: 'blur(4px)', zIndex: 60,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16,
+        }}
+      >
+        <div style={{
+          background: 'var(--bg-card)', borderRadius: 'var(--radius-xl)',
+          border: '1px solid rgba(239,68,68,0.4)', width: '100%', maxWidth: 520,
+          boxShadow: '0 20px 60px rgba(0,0,0,0.5)', padding: 24,
+        }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+            <AlertTriangle size={22} style={{ color: '#ef4444', flexShrink: 0 }} />
+            <div>
+              <h3 id="parametrizacion-error-title" style={{ margin: 0, fontSize: '1.05rem' }}>
+                No se pudo validar la parametrización
+              </h3>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginTop: 8 }}>
+                {validationError}
+              </p>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.78rem' }}>
+                El formulario permanecerá bloqueado para evitar documentos sin asiento contable válido.
+              </p>
+            </div>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 20 }}>
+            <button className="btn btn-secondary" onClick={onClose}>Cancelar</button>
+            <button className="btn btn-secondary" onClick={() => navigate('/configuracion')}>
+              <Settings size={14} /> Ir a parametrizar
+            </button>
+            <button className="btn btn-primary" onClick={() => setValidationAttempt(attempt => attempt + 1)}>
+              Reintentar
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (faltantes === null || faltantes.length === 0) return null
 
   return (
     <div
