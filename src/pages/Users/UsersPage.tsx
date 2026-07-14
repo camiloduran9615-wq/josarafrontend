@@ -4,7 +4,7 @@ import { userService } from '@/services/user.service'
 import { useAuth } from '@/context/AuthContext'
 import type { User, CreateUserPayload, UpdateUserPayload, Role } from '@/types'
 import {
-  UserPlus, Pencil, UserX, Search, Shield,
+  UserPlus, Pencil, UserX, UserCheck, Search, Shield,
   CheckCircle, XCircle, X,
 } from 'lucide-react'
 
@@ -117,7 +117,6 @@ function EditUserModal({ user, onClose }: { user: User; onClose: () => void }) {
     apellido: user.apellido,
     email:    user.email,
     role:     user.role,
-    activo:   user.activo,
   })
   const [error, setError] = useState('')
 
@@ -170,10 +169,6 @@ function EditUserModal({ user, onClose }: { user: User; onClose: () => void }) {
               {ROLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
             </select>
           </div>
-          <label className="flex items-center gap-3 mt-4" style={{ cursor: 'pointer', userSelect: 'none', fontSize: '0.88rem' }}>
-            <input type="checkbox" checked={form.activo ?? true} onChange={e => f('activo', e.target.checked)} />
-            <span>Usuario <strong>{form.activo ? 'activo' : 'inactivo'}</strong></span>
-          </label>
 
           <div className="flex gap-3 mt-6">
             <button type="button" className="btn btn-secondary" onClick={onClose}>Cancelar</button>
@@ -187,22 +182,67 @@ function EditUserModal({ user, onClose }: { user: User; onClose: () => void }) {
   )
 }
 
+/* ─── Confirmación de estado ──────────────────────────────────── */
+function UserStatusModal({ user, onClose }: { user: User; onClose: () => void }) {
+  const qc = useQueryClient()
+  const [error, setError] = useState('')
+  const activating = !user.activo
+
+  const mutation = useMutation({
+    mutationFn: () => userService.setStatus(user.id, activating),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['users'] }); onClose() },
+    onError: (e: unknown) => {
+      const err = e as { response?: { data?: { message?: string; errors?: Record<string, string[]> } } }
+      const validationMessage = err.response?.data?.errors?.activo?.[0]
+      setError(validationMessage ?? err.response?.data?.message ?? 'No fue posible cambiar el estado del usuario.')
+    },
+  })
+
+  return (
+    <div className="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="user-status-title">
+      <div className="modal">
+        <div className="modal-header">
+          <h3 id="user-status-title">{activating ? 'Activar usuario' : 'Inactivar usuario'}</h3>
+          <button className="btn btn-secondary btn-sm" onClick={onClose} aria-label="Cerrar"><X size={16}/></button>
+        </div>
+
+        {error && <div className="alert alert-error mb-4"><XCircle size={16}/>{error}</div>}
+
+        <p>
+          {activating
+            ? <>¿Deseas permitir nuevamente el acceso de <strong>{user.nombre_completo}</strong>?</>
+            : <>El usuario <strong>{user.nombre_completo}</strong> perderá acceso inmediatamente y sus sesiones activas serán cerradas. Su historial no será eliminado.</>
+          }
+        </p>
+
+        <div className="flex gap-3 mt-6">
+          <button type="button" className="btn btn-secondary" onClick={onClose} disabled={mutation.isPending}>Cancelar</button>
+          <button
+            type="button"
+            className={`btn ${activating ? 'btn-primary' : 'btn-danger'}`}
+            onClick={() => mutation.mutate()}
+            disabled={mutation.isPending}
+            style={{ flex: 1 }}
+          >
+            {mutation.isPending ? <><span className="spinner" /> Procesando...</> : activating ? 'Activar usuario' : 'Inactivar usuario'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 /* ─── Página principal ──────────────────────────────────────────── */
 export default function UsersPage() {
   const { user: me } = useAuth()
-  const qc = useQueryClient()
   const [search, setSearch] = useState('')
   const [showCreate, setShowCreate] = useState(false)
   const [editUser, setEditUser] = useState<User | null>(null)
+  const [statusUser, setStatusUser] = useState<User | null>(null)
 
   const { data: users = [], isLoading } = useQuery({
     queryKey: ['users'],
     queryFn: userService.list,
-  })
-
-  const deactivate = useMutation({
-    mutationFn: userService.deactivate,
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['users'] }),
   })
 
   const filtered = users.filter(u =>
@@ -223,6 +263,7 @@ export default function UsersPage() {
     <>
       {showCreate && <CreateUserModal onClose={() => setShowCreate(false)} />}
       {editUser && <EditUserModal user={editUser} onClose={() => setEditUser(null)} />}
+      {statusUser && <UserStatusModal user={statusUser} onClose={() => setStatusUser(null)} />}
 
       <div className="page-header">
         <div>
@@ -308,14 +349,15 @@ export default function UsersPage() {
                         >
                           <Pencil size={14} />
                         </button>
-                        {u.id !== me?.id && u.activo && (
+                        {u.id !== me?.id && (
                           <button
-                            className="btn btn-danger btn-sm"
-                            title="Desactivar"
-                            onClick={() => deactivate.mutate(u.id)}
-                            disabled={deactivate.isPending}
+                            className={`btn btn-sm ${u.activo ? 'btn-danger' : 'btn-secondary'}`}
+                            title={u.activo ? 'Inactivar usuario' : 'Activar usuario'}
+                            aria-label={`${u.activo ? 'Inactivar' : 'Activar'} a ${u.nombre_completo}`}
+                            onClick={() => setStatusUser(u)}
                           >
-                            <UserX size={14} />
+                            {u.activo ? <UserX size={14} /> : <UserCheck size={14} />}
+                            {u.activo ? 'Inactivar' : 'Activar'}
                           </button>
                         )}
                       </div>

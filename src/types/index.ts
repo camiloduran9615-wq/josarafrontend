@@ -79,5 +79,4 @@ export interface UpdateUserPayload {
   apellido?: string
   email?: string
   role?: Role
-  activo?: boolean
 }

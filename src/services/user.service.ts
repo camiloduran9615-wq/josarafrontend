@@ -25,8 +25,9 @@ export const userService = {
     return data.data
   },
 
-  deactivate: async (id: string): Promise<void> => {
-    await api.delete(`${base()}/users/${id}`)
+  setStatus: async (id: string, activo: boolean): Promise<User> => {
+    const { data } = await api.patch<ApiResponse<User>>(`${base()}/users/${id}/status`, { activo })
+    return data.data
   },
 
   changePassword: async (id: string, payload: { current_password: string; password: string; password_confirmation: string }): Promise<void> => {
