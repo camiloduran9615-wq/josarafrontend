@@ -13,6 +13,7 @@ import {
 import { api } from '@/lib/api'
 import { extractApiError } from '@/lib/errors'
 import { getTenantId } from '@/services/auth.service'
+import { paymentConfigurationService, type PaymentTerm, type PaymentMethod } from '@/services/paymentConfiguration.service'
 
 // ─── Conceptos de retención (al estilo SIIGO) ────────────────────────────────
 
@@ -126,6 +127,8 @@ export default function NuevoDocumentoIngresoModal({ isOpen, onClose, onSuccess 
   const [bodegas, setBodegas]         = useState<Bodega[]>([])
   const [productos, setProductos]     = useState<Producto[]>([])
   const [tiposDoc, setTiposDoc]       = useState<TipoDocumentoIngreso[]>([])
+  const [paymentTerms, setPaymentTerms] = useState<PaymentTerm[]>([])
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([])
   const [error, setError]             = useState('')
   const [items, setItems]             = useState<ItemLine[]>([emptyItem()])
   const [retenciones, setRetenciones] = useState<RetencionLine[]>([])
@@ -134,10 +137,10 @@ export default function NuevoDocumentoIngresoModal({ isOpen, onClose, onSuccess 
 
   // Calcula la fecha de vencimiento sugerida según forma de pago:
   // crédito → fecha + 30 días | contado → mismo día.
-  const sugerirVencimiento = (fechaStr: string, formaPago: string): string => {
+  const sugerirVencimiento = (fechaStr: string, formaPago: string, creditDays = 30): string => {
     if (!fechaStr) return ''
     const d = new Date(`${fechaStr}T00:00:00`)
-    if (formaPago === 'credito') d.setDate(d.getDate() + 30)
+    if (formaPago === 'credito') d.setDate(d.getDate() + creditDays)
     return d.toISOString().split('T')[0]
   }
 
@@ -146,19 +149,22 @@ export default function NuevoDocumentoIngresoModal({ isOpen, onClose, onSuccess 
     centro_costo_id: '', tercero_id: '', tipo: 'factura_compra',
     fecha: hoy,
     fecha_vencimiento: sugerirVencimiento(hoy, 'contado_banco'),
-    concepto: '', forma_pago: 'contado_banco',
+    concepto: '', forma_pago: 'contado_banco', payment_term_id: '', payment_method_id: '',
     sucursal_id: '', observaciones: '', numero_documento_proveedor: '',
   })
 
   const loadCatalogues = useCallback(async () => {
-    const [t, b, p, td] = await Promise.all([
+    const [t, b, p, td, pt, pm] = await Promise.all([
       tercerosService.getAll().then(r => r.data || []),
       bodegasService.getAll(),
       api.get(`/${getTenantId()}/productos`).then(r => r.data.data ?? []),
       tipoDocumentoIngresoService.getAll().catch(() => []),
+      paymentConfigurationService.terms(false),
+      paymentConfigurationService.methods(false),
     ])
     setTerceros(t); setBodegas(b); setProductos(p)
     setTiposDoc(td)
+    setPaymentTerms(pt.filter(term => term.applies_to_purchases)); setPaymentMethods(pm.filter(method => method.allows_purchases)); const contado = pt.find(term => term.code === 'CONTADO' && term.is_active); const transferencia = pm.find(method => method.code === 'TRANSFERENCIA' && method.is_active); setForm(current => current.payment_term_id ? current : { ...current, payment_term_id: contado?.id ?? '', payment_method_id: transferencia?.id ?? '' })
   }, [])
 
   useEffect(() => { if (isOpen) loadCatalogues() }, [isOpen, loadCatalogues])
@@ -282,7 +288,7 @@ export default function NuevoDocumentoIngresoModal({ isOpen, onClose, onSuccess 
   // ── Submit ────────────────────────────────────────────────────────────────
   const resetForm = () => {
     setForm({ centro_costo_id: '', tercero_id: '', tipo: 'factura_compra', fecha: new Date().toISOString().split('T')[0],
-      fecha_vencimiento: sugerirVencimiento(hoy, 'contado_banco'), concepto: '', forma_pago: 'contado_banco', sucursal_id: '', observaciones: '', numero_documento_proveedor: '' })
+      fecha_vencimiento: sugerirVencimiento(hoy, 'contado_banco'), concepto: '', forma_pago: 'contado_banco', payment_term_id: '', payment_method_id: '', sucursal_id: '', observaciones: '', numero_documento_proveedor: '' })
     setItems([emptyItem()]); setRetenciones([]); setError('')
     setTipoSeleccionado(null); setShowReten(false)
   }
@@ -455,17 +461,23 @@ export default function NuevoDocumentoIngresoModal({ isOpen, onClose, onSuccess 
                 }))} required />
             </div>
             <div className="input-group">
-              <label>Forma de Pago</label>
-              <select className="input" value={form.forma_pago}
-                onChange={e => setForm(f => ({
-                  ...f,
-                  forma_pago: e.target.value,
-                  // recalcular vencimiento al cambiar la forma de pago
-                  fecha_vencimiento: sugerirVencimiento(f.fecha, e.target.value),
-                }))}>
-                <option value="contado_banco">Contado — por banco (transferencia/cheque)</option>
-                <option value="contado_efectivo">Contado — efectivo (caja)</option>
-                <option value="credito">Crédito (cuenta por pagar)</option>
+              <label>Condición de pago *</label>
+              <select className="input" value={form.payment_term_id} required onChange={e => {
+                const term = paymentTerms.find(item => item.id === e.target.value); const credit = term?.timing === "credit";
+                setForm(f => ({ ...f, payment_term_id: e.target.value, forma_pago: credit ? "credito" : f.forma_pago === "credito" ? "contado_banco" : f.forma_pago, fecha_vencimiento: sugerirVencimiento(f.fecha, credit ? "credito" : "contado", term?.default_credit_days ?? 30) }))
+              }}>
+                <option value="">Selecciona una condición…</option>
+                {paymentTerms.map(term => <option key={term.id} value={term.id}>{term.name}{term.timing === "credit" ? ` — ${term.default_credit_days} días` : ""}</option>)}
+              </select>
+            </div>
+            <div className="input-group">
+              <label>Medio de pago {form.forma_pago !== "credito" ? "*" : "(previsto)"}</label>
+              <select className="input" value={form.payment_method_id} required={form.forma_pago !== "credito"} onChange={e => {
+                const method = paymentMethods.find(item => item.id === e.target.value); const legacy = method?.type === "cash" ? "contado_efectivo" : "contado_banco";
+                setForm(f => ({ ...f, payment_method_id: e.target.value, forma_pago: f.forma_pago === "credito" ? "credito" : legacy }))
+              }}>
+                <option value="">Selecciona un medio…</option>
+                {paymentMethods.map(method => <option key={method.id} value={method.id}>{method.name}</option>)}
               </select>
             </div>
             <div className="input-group">

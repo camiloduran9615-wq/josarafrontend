@@ -9,6 +9,7 @@ import { tercerosService, type Tercero } from '@/services/terceros.service'
 import { api } from '@/lib/api'
 import { extractApiError } from '@/lib/errors'
 import { getTenantId } from '@/services/auth.service'
+import { paymentConfigurationService, type PaymentTerm, type PaymentMethod } from '@/services/paymentConfiguration.service'
 import ProductoModal from '@/pages/Inventario/ProductoModal'
 
 interface Props {
@@ -34,17 +35,6 @@ const TAX_RATES = [
   { value: 5,  label: 'IVA 5%' },
   { value: 0,  label: 'Exento (0%)' },
 ]
-const PAYMENT_FORMS   = [{ value: '1', label: 'Contado' }, { value: '2', label: 'Crédito' }]
-// Códigos DIAN UN/EDIFACT 4461 (medios de pago electrónicos)
-const PAYMENT_METHODS = [
-  { value: '10', label: 'Efectivo' },
-  { value: '20', label: 'Cheque' },
-  { value: '42', label: 'Consignación bancaria' },
-  { value: '47', label: 'Transferencia Crédito (PSE / ACH)' },
-  { value: '48', label: 'Tarjeta de Crédito' },
-  { value: '49', label: 'Tarjeta Débito' },
-  { value: 'ZZZ', label: 'Otro medio de pago' },
-]
 const WITHHOLDING_TYPES = [
   { code: '05', label: 'Retefuente' },
   { code: '06', label: 'ReteIVA' },
@@ -58,6 +48,7 @@ const tomorrow = () => {
   return d.toISOString().split('T')[0]
 }
 
+const dueDateFor = (date: string, days: number) => { const value = new Date(`${date}T00:00:00`); value.setDate(value.getDate() + days); return value.toISOString().split("T")[0] }
 
 // ─── Buscador de producto por línea ─────────────────────────────────────────
 function ProductoSearchInput({
@@ -203,6 +194,7 @@ export default function NuevaFacturaModal({ isOpen, onClose, onSuccess }: Props)
   // Solo mantenemos un setter dummy para no romper el loadCatalogs existente.
   const [, setTerceros] = useState<Tercero[]>([])
   const [productos, setProductos] = useState<any[]>([])
+  const [paymentTerms, setPaymentTerms] = useState<PaymentTerm[]>([]); const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([])
   const [error, setError] = useState('')
 
   const [form, setForm] = useState({
@@ -212,6 +204,7 @@ export default function NuevaFacturaModal({ isOpen, onClose, onSuccess }: Props)
     tercero_id: '',
     payment_form: '1',
     payment_method_code: '10',
+    payment_term_id: "", payment_method_id: "",
     payment_due_date: '',
     observaciones: '',
   })
@@ -231,15 +224,17 @@ export default function NuevaFacturaModal({ isOpen, onClose, onSuccess }: Props)
   const loadData = async () => {
     try {
       setFetchingData(true)
-      const [compsRes, tercerosRes, productosRes] = await Promise.all([
+      const [compsRes, tercerosRes, productosRes, termsRes, methodsRes] = await Promise.all([
         tipoComprobantesService.getAll(),
         tercerosService.getAll(),
         api.get(`/${getTenantId()}/productos`),
+        paymentConfigurationService.terms(false),        paymentConfigurationService.methods(false),
       ])
       const activos = compsRes.filter(c => c.activo)
       setComprobantes(activos)
       setTerceros(tercerosRes.data || [])
       setProductos(productosRes.data.data || [])
+      const salesTerms = termsRes.filter(term => term.applies_to_sales); const salesMethods = methodsRes.filter(method => method.allows_sales && method.dian_code); setPaymentTerms(salesTerms); setPaymentMethods(salesMethods); const contado = salesTerms.find(term => term.code === 'CONTADO'); const efectivo = salesMethods.find(method => method.code === 'EFECTIVO'); setForm(prev => ({ ...prev, payment_term_id: contado?.id ?? '', payment_method_id: efectivo?.id ?? '', payment_form: '1', payment_method_code: efectivo?.dian_code ?? '10' }))
       if (activos.length > 0) {
         const fv = activos.find(c => c.tipo_documento === 'FV') || activos[0]
         setForm(prev => ({ ...prev, tipo_comprobante_id: fv.id, observaciones: fv.observaciones_default || '' }))
@@ -252,6 +247,7 @@ export default function NuevaFacturaModal({ isOpen, onClose, onSuccess }: Props)
   }
 
   const set = (patch: Partial<typeof form>) => setForm(prev => ({ ...prev, ...patch }))
+  const selectedPaymentTerm = paymentTerms.find(term => term.id === form.payment_term_id); const allowedPaymentMethods = selectedPaymentTerm?.methods?.length ? paymentMethods.filter(method => selectedPaymentTerm.methods?.some(allowed => allowed.id === method.id)) : paymentMethods
   const selectedComprobante = comprobantes.find(c => c.id === form.tipo_comprobante_id)
 
   const onSelectComprobante = (id: string) => {
@@ -447,16 +443,18 @@ export default function NuevaFacturaModal({ isOpen, onClose, onSuccess }: Props)
             {/* Forma de pago + Observaciones */}
             <div style={{ display: 'grid', gridTemplateColumns: `160px 220px${form.payment_form === '2' ? ' 170px' : ''} 1fr`, gap: 14 }}>
               <div className="input-group" style={{ margin: 0 }}>
-                <label>Forma de pago</label>
-                <select className="input" value={form.payment_form}
-                  onChange={e => set({ payment_form: e.target.value, payment_due_date: '' })}>
-                  {PAYMENT_FORMS.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
+                <label>Condición de pago</label>
+                <select className="input" required value={form.payment_term_id} onChange={e => {
+                  const term = paymentTerms.find(item => item.id === e.target.value); const credit = term?.timing === "credit";
+                  set({ payment_term_id: e.target.value, payment_form: credit ? "2" : "1", payment_due_date: credit ? dueDateFor(form.fecha_emision, term?.default_credit_days ?? 30) : "" })
+                }}>
+                  <option value="">Selecciona…</option>{paymentTerms.map(term => <option key={term.id} value={term.id}>{term.name}{term.timing === "credit" ? ` — ${term.default_credit_days} días` : ""}</option>)}
                 </select>
               </div>
               <div className="input-group" style={{ margin: 0 }}>
-                <label>Método de pago</label>
-                <select className="input" value={form.payment_method_code} onChange={e => set({ payment_method_code: e.target.value })}>
-                  {PAYMENT_METHODS.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
+                <label>Medio de pago</label>
+                <select className="input" required value={form.payment_method_id} onChange={e => { const method = paymentMethods.find(item => item.id === e.target.value); set({ payment_method_id: e.target.value, payment_method_code: method?.dian_code ?? "" }) }}>
+                  <option value="">Selecciona…</option>{allowedPaymentMethods.map(method => <option key={method.id} value={method.id}>{method.name}</option>)}
                 </select>
               </div>
               {form.payment_form === '2' && (

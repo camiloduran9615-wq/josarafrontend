@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import {
   Building2, FileText, Calculator,
-  Link2, Settings as SettingsIcon, Layers, ShoppingCart, Grid3X3, Percent, MapPinned, Ruler,
+  Link2, Settings as SettingsIcon, Layers, ShoppingCart, Grid3X3, Percent, MapPinned, Ruler, WalletCards,
 } from 'lucide-react'
 import ConfigPage from './ConfigPage'
 import ResolucionesPage from './ResolucionesPage'
@@ -15,8 +15,9 @@ import FactusConfigPage from './FactusConfigPage'
 import CentrosCostoPage from '@/pages/CentrosCosto/CentrosCostoPage'
 import MunicipiosDanePage from './MunicipiosDanePage'
 import UnidadesDianPage from './UnidadesDianPage'
+import PaymentConfigurationPage from './PaymentConfigurationPage'
 
-type Tab = 'empresa' | 'sucursales' | 'resoluciones' | 'municipios_dane' | 'unidades_dian' | 'comprobantes' | 'contabilidad' | 'tipos_compra' | 'centros_costo' | 'impuestos' | 'integracion'
+type Tab = 'empresa' | 'sucursales' | 'resoluciones' | 'municipios_dane' | 'unidades_dian' | 'comprobantes' | 'contabilidad' | 'tipos_compra' | 'centros_costo' | 'impuestos' | 'formas_pago' | 'integracion'
 
 export default function SettingsHub() {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -34,6 +35,7 @@ export default function SettingsHub() {
     { id: 'tipos_compra',   label: 'Tipos de Compra',      icon: ShoppingCart },
     { id: 'centros_costo', label: 'Centros de Costo',      icon: Grid3X3 },
     { id: 'impuestos',     label: 'Impuestos',             icon: Percent },
+    { id: 'formas_pago',   label: 'Formas de Pago',        icon: WalletCards },
     { id: 'integracion',   label: 'API & Factus',          icon: Link2 },
   ]
 
@@ -138,6 +140,12 @@ export default function SettingsHub() {
           {activeTab === 'impuestos' && (
             <div className="animate-in fade-in slide-in-from-right-4 duration-300">
               <ImpuestosPage embedded />
+            </div>
+          )}
+
+          {activeTab === 'formas_pago' && (
+            <div className="animate-in fade-in slide-in-from-right-4 duration-300">
+              <PaymentConfigurationPage embedded />
             </div>
           )}
 
