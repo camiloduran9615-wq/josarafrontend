@@ -346,19 +346,22 @@ export default function NuevoDocumentoIngresoModal({ isOpen, onClose, onSuccess 
   }
 
   return (
-    <div className="modal-overlay">
-      <div className="modal" style={{ maxWidth: 960, maxHeight: '95vh', overflowY: 'auto' }}>
-        <div className="modal-header">
-          <h2 className="page-title">Nuevo Documento de Ingreso</h2>
-          <button onClick={onClose} className="btn-icon"><X size={20} /></button>
+    <div className="modal-overlay purchase-modal-overlay">
+      <div className="modal purchase-modal">
+        <div className="modal-header purchase-modal-header">
+          <div>
+            <h2 className="modal-title">Registrar factura de compra</h2>
+            <p className="modal-description">Registra el documento del proveedor y la entrada a inventario.</p>
+          </div>
+          <button type="button" onClick={onClose} className="btn-icon" aria-label="Cerrar factura de compra"><X size={20} /></button>
         </div>
 
-        {error && <div className="alert alert-error" style={{ margin: '0 0 16px' }}>{error}</div>}
+        {error && <div className="alert alert-error purchase-modal-error">{error}</div>}
 
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+        <form onSubmit={handleSubmit} className="purchase-modal-form">
 
           {/* ── Selector de Tipo de Documento (SIIGO-style) ── */}
-          <div style={{
+          <div className={`purchase-document-type ${tipoSeleccionado ? 'is-selected' : ''}`} style={{
             padding: '14px 16px',
             background: 'var(--bg-surface)',
             border: '1px solid var(--border)',
@@ -371,7 +374,7 @@ export default function NuevoDocumentoIngresoModal({ isOpen, onClose, onSuccess 
                 Tipo de Documento
               </span>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, alignItems: 'start' }}>
+            <div className="purchase-document-type-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, alignItems: 'start' }}>
               <div className="input-group" style={{ margin: 0 }}>
                 <label>Tipo parametrizado</label>
                 <select
@@ -426,7 +429,7 @@ export default function NuevoDocumentoIngresoModal({ isOpen, onClose, onSuccess 
           <CentroCostoSelect value={form.centro_costo_id} onChange={v => setForm(f => ({ ...f, centro_costo_id: v }))} />
 
           {/* ── Cabecera ── */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+          <div className="purchase-header-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
             <div className="input-group">
               <label>Proveedor / Tercero *</label>
               <select className="input" value={form.tercero_id}
@@ -493,8 +496,8 @@ export default function NuevoDocumentoIngresoModal({ isOpen, onClose, onSuccess 
           </div>
 
           {/* ── Líneas ── */}
-          <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+          <div className="purchase-lines-section">
+            <div className="purchase-section-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
               <h3 style={{ fontSize: '0.9rem', fontWeight: 700, margin: 0 }}>Líneas del Documento</h3>
               <button type="button" onClick={addItem} className="btn btn-secondary" style={{ fontSize: '0.82rem', padding: '5px 12px' }}>
                 <Plus size={14} /> Agregar Línea
@@ -502,12 +505,12 @@ export default function NuevoDocumentoIngresoModal({ isOpen, onClose, onSuccess 
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {items.map((item, i) => (
-                <div key={i} style={{
+                <div key={i} className={`purchase-line-card purchase-line-card--${item.tipo_linea}`} style={{
                   background: 'var(--bg-surface)', border: '1px solid var(--border)',
                   borderRadius: 'var(--radius-lg)', padding: '12px 14px',
                   borderLeft: `4px solid ${item.tipo_linea === 'producto' ? 'var(--accent)' : item.tipo_linea === 'activo_fijo' ? '#f59e0b' : '#10b981'}`,
                 }}>
-                  <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end', marginBottom: 8 }}>
+                  <div className="purchase-line-primary" style={{ display: 'flex', gap: 10, alignItems: 'flex-end', marginBottom: 8 }}>
                     <div className="input-group" style={{ width: 170, margin: 0 }}>
                       <label style={{ fontSize: '0.72rem' }}>Tipo de línea</label>
                       <select className="input" style={{ fontSize: '0.8rem' }} value={item.tipo_linea}
@@ -536,7 +539,7 @@ export default function NuevoDocumentoIngresoModal({ isOpen, onClose, onSuccess 
                       <Trash2 size={14} />
                     </button>
                   </div>
-                  <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end' }}>
+                  <div className="purchase-line-detail" style={{ display: 'flex', gap: 10, alignItems: 'flex-end' }}>
                     {item.tipo_linea === 'producto' ? (
                       <>
                         <div className="input-group" style={{ flex: 2, margin: 0 }}>
@@ -582,19 +585,19 @@ export default function NuevoDocumentoIngresoModal({ isOpen, onClose, onSuccess 
                         />
                       </div>
                     )}
-                    <div className="input-group" style={{ width: 80, margin: 0 }}>
+                    <div className="input-group purchase-line-quantity" style={{ width: 80, margin: 0 }}>
                       <label style={{ fontSize: '0.72rem' }}>Cant.</label>
                       <input type="number" className="input" style={{ fontSize: '0.82rem' }}
                         value={item.cantidad} min={0.001} step={0.001}
                         onChange={e => updateItem(i, 'cantidad', parseFloat(e.target.value) || 0)} />
                     </div>
-                    <div className="input-group" style={{ width: 120, margin: 0 }}>
+                    <div className="input-group purchase-line-price" style={{ width: 120, margin: 0 }}>
                       <label style={{ fontSize: '0.72rem' }}>Precio Unit. $</label>
                       <input type="number" className="input" style={{ fontSize: '0.82rem' }}
                         value={item.precio_unitario} min={0}
                         onChange={e => updateItem(i, 'precio_unitario', parseFloat(e.target.value) || 0)} />
                     </div>
-                    <div style={{ textAlign: 'right', minWidth: 90, paddingBottom: 4 }}>
+                    <div className="purchase-line-subtotal" style={{ textAlign: 'right', minWidth: 90, paddingBottom: 4 }}>
                       <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Subtotal</div>
                       <div style={{ fontWeight: 700, fontSize: '0.85rem' }}>
                         ${fmt(item.cantidad * item.precio_unitario)}
@@ -607,13 +610,14 @@ export default function NuevoDocumentoIngresoModal({ isOpen, onClose, onSuccess 
           </div>
 
           {/* ── Retenciones (estilo SIIGO) ── */}
-          <div style={{
+          <div className="purchase-withholdings" style={{
             border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)',
             overflow: 'hidden',
           }}>
             <button
               type="button"
               onClick={() => setShowReten(v => !v)}
+              className="purchase-withholdings-toggle"
               style={{
                 width: '100%', display: 'flex', alignItems: 'center', gap: 8,
                 padding: '11px 16px', background: 'var(--bg-surface)',
@@ -639,7 +643,7 @@ export default function NuevoDocumentoIngresoModal({ isOpen, onClose, onSuccess 
             </button>
 
             {showReten && (
-              <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <div className="purchase-withholdings-body" style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {/* Selector para agregar concepto manualmente */}
                 {conceptosDisponibles.length > 0 && (
                   <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
@@ -680,7 +684,7 @@ export default function NuevoDocumentoIngresoModal({ isOpen, onClose, onSuccess 
                     (tipoSeleccionado.retefuente_concepto === r.conceptoId ||
                      tipoSeleccionado.reteica_concepto === r.conceptoId)
                   return (
-                    <div key={i} style={{
+                    <div key={i} className="purchase-withholding-row" style={{
                       display: 'grid', gridTemplateColumns: '1fr 120px 100px 100px 32px',
                       gap: 8, alignItems: 'center',
                       padding: '8px 12px',
@@ -729,11 +733,11 @@ export default function NuevoDocumentoIngresoModal({ isOpen, onClose, onSuccess 
           </div>
 
           {/* ── Footer con totales ── */}
-          <div style={{
+          <div className="purchase-summary" style={{
             display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end',
             paddingTop: 16, borderTop: '1px solid var(--border)',
           }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 3, fontSize: '0.85rem' }}>
+            <div className="purchase-summary-values" style={{ display: 'flex', flexDirection: 'column', gap: 3, fontSize: '0.85rem' }}>
               <span style={{ color: 'var(--text-muted)' }}>
                 Subtotal: <strong>${fmt(totals.bruto)}</strong>
               </span>
@@ -754,7 +758,7 @@ export default function NuevoDocumentoIngresoModal({ isOpen, onClose, onSuccess 
                 Total a pagar: <span style={{ color: 'var(--accent)' }}>${fmt(totalPagar)}</span>
               </span>
             </div>
-            <div style={{ display: 'flex', gap: 10 }}>
+            <div className="purchase-summary-actions" style={{ display: 'flex', gap: 10 }}>
               <button type="button" onClick={onClose} className="btn btn-secondary">Cancelar</button>
               <button type="submit" className="btn btn-primary" disabled={loading}>
                 {loading ? <Loader2 size={16} className="spinner" /> : <Save size={16} />}
