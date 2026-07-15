@@ -176,8 +176,8 @@
 .purchase-modal {
   display: flex;
   flex-direction: column;
-  width: min(1120px, calc(100vw - 48px));
-  max-width: 1120px;
+  width: min(1240px, calc(100vw - 48px));
+  max-width: 1240px;
   max-height: min(94vh, 980px);
   overflow: hidden;
 }
