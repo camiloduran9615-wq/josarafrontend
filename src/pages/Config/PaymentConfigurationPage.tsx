@@ -116,8 +116,8 @@ export default function PaymentConfigurationPage({ embedded }: Props) {
     </div>}
     {tab === 'rules' && <PaymentAccountingRulesPanel terms={terms} methods={methods} />}
 
-    {editor && <div className="modal-overlay"><div className="modal-content" style={{ maxWidth: 760 }}>
-      <div className="modal-header"><div><h2>{editor.value ? 'Editar' : 'Crear'} {editor.kind === 'term' ? 'condición' : 'medio'} de pago</h2></div><button className="modal-close" onClick={() => setEditor(null)}><X /></button></div>
+    {editor && <div className="modal-overlay"><div className="modal modal-md">
+      <div className="modal-header"><h2 className="modal-title">{editor.value ? 'Editar' : 'Crear'} {editor.kind === 'term' ? 'condición' : 'medio'} de pago</h2><button type="button" className="btn-icon" aria-label="Cerrar modal" onClick={() => setEditor(null)}><X size={18} /></button></div>
       <div className="modal-body">
         {editor.kind === 'term' ? <div className="form-grid">
           <label className="input-group">Código<input className="input" value={termForm.code} onChange={e => setTermForm({ ...termForm, code: e.target.value })} /></label>

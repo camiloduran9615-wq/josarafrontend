@@ -101,8 +101,8 @@ export default function PaymentAccountingRulesPanel({ terms, methods }: { terms:
       </tr>)}</tbody>
     </table></div>
 
-    {editing !== undefined && <div className="modal-overlay"><div className="modal-content" style={{ maxWidth: 760 }}>
-      <div className="modal-header"><h2>{editing ? 'Editar' : 'Crear'} regla contable</h2><button className="modal-close" onClick={() => setEditing(undefined)}><X /></button></div>
+    {editing !== undefined && <div className="modal-overlay"><div className="modal modal-md">
+      <div className="modal-header"><h2 className="modal-title">{editing ? 'Editar' : 'Crear'} regla contable</h2><button type="button" className="btn-icon" aria-label="Cerrar modal" onClick={() => setEditing(undefined)}><X size={18} /></button></div>
       <div className="modal-body"><div className="form-grid">
         <label className="input-group">Operación<select className="input" value={form.operation_type} onChange={event => setForm({ ...form, operation_type: event.target.value as RulePayload['operation_type'] })}><option value="purchase">Compra</option><option value="sale">Venta</option></select></label>
         <label className="input-group">Rol contable<select className="input" value={form.account_role} onChange={event => setForm({ ...form, account_role: event.target.value as AccountRole })}>{roles.map(role => <option key={role} value={role}>{roleLabels[role]}</option>)}</select></label>
